@@ -67,10 +67,12 @@ NSValue *HHConversionRuleToNSValue(HHConversionRule rule)
     NSString *directName = [NSString stringWithFormat:@"%@->%@", srcUnit, targetUnit];
     [_graph addEdge:[PESGraphEdge edgeWithName:directName] fromNode:node1 toNode:node2];
     [_weights setObject:HHConversionRuleToNSValue(rule) forKey:directName];
-
+    
     NSString *inverseName = [NSString stringWithFormat:@"%@->%@", targetUnit, srcUnit];
-    [_graph addEdge:[PESGraphEdge edgeWithName:inverseName] fromNode:node2 toNode:node1];
-    [_weights setObject:HHConversionRuleToNSValue(HHConversionRuleMakeInverse(rule)) forKey:inverseName];
+    if (!_weights[inverseName]) {
+        [_graph addEdge:[PESGraphEdge edgeWithName:inverseName] fromNode:node2 toNode:node1];
+        [_weights setObject:HHConversionRuleToNSValue(HHConversionRuleMakeInverse(rule)) forKey:inverseName];
+    }
 }
 
 - (void)letUnit:(NSString *)srcUnit convertToUnit:(NSString *)targetUnit byMultiplyingBy:(double)multiplier
