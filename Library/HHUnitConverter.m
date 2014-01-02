@@ -12,17 +12,18 @@
 #import "PESGraphRoute.h"
 #import "PESGraphRouteStep.h"
 
-HHConversionRule HHConversionRuleMake(double multiplier, double summand)
+HHConversionRule HHConversionRuleMake(double multiplier, double summand, BOOL sumafter)
 {
     HHConversionRule rule;
     rule.multiplier = multiplier;
+    rule.sumafter = sumafter;
     rule.summand = summand;
     return rule;
 }
 
 HHConversionRule HHConversionRuleMakeInverse(HHConversionRule rule)
 {
-    return HHConversionRuleMake(1 / rule.multiplier, -rule.summand / rule.multiplier);
+    return HHConversionRuleMake(1 / rule.multiplier, -rule.summand / rule.multiplier, rule.sumafter);
 }
 
 HHConversionRule HHConversionRuleMakeFromNSValue(NSValue *value)
@@ -87,7 +88,12 @@ NSValue *HHConversionRuleToNSValue(HHConversionRule rule)
 
 - (void)letUnit:(NSString *)srcUnit convertToUnit:(NSString *)targetUnit byMultiplyingBy:(double)multiplier andAdding:(double)summand
 {
-    [self setConversionRule:HHConversionRuleMake(multiplier, summand) fromUnit:srcUnit toUnit:targetUnit];
+    [self setConversionRule:HHConversionRuleMake(multiplier, summand, YES) fromUnit:srcUnit toUnit:targetUnit];
+}
+
+- (void)letUnit:(NSString *)srcUnit convertToUnit:(NSString *)targetUnit byMultiplyingBy:(double)multiplier andAdding:(double)summand after:(BOOL)after
+{
+    [self setConversionRule:HHConversionRuleMake(multiplier, summand, after) fromUnit:srcUnit toUnit:targetUnit];
 }
 
 - (NSNumber *)value:(double)value convertedFromUnit:(NSString *)srcUnit toUnit:(NSString *)targetUnit
@@ -155,38 +161,24 @@ NSValue *HHConversionRuleToNSValue(HHConversionRule rule)
 
 - (double)_valueByApplyingConversionRules:(NSArray *)rules toValue:(double)value
 {
-    HHConversionRule resultingRule = { .multiplier = 1, .summand = 0 };
-
-//    NSLog(@"Rules count: %u", rules.count);
-
-    for (NSValue *ruleValue in rules) {
-//    for (int i = 0; i < rules.count; i++) {
-//        HHConversionRule *rule = [rules objectAtIndex:i];
-//        printf("M%d * ", i + 1);
-//        printf("%f * ", [rule multiplier]);
-        HHConversionRule rule = HHConversionRuleMakeFromNSValue(ruleValue);
-        resultingRule.multiplier *= rule.multiplier;
-    }
-//    printf("x");
-//    printf("%f", value);
-
-    for (int i = rules.count - 1; i >= 0; i--) {
-
-//        printf(" + ");
-        double iMultiplier = 1;
-        for (int j = 0; j < i; j++) {
-//            printf("M%d * ", j + 1);
-//            printf("%f * ", [(HHConversionRule *)[rules objectAtIndex:j] multiplier]);
-            iMultiplier *= HHConversionRuleMakeFromNSValue([rules objectAtIndex:j]).multiplier;
+    double result = value;
+    
+    HHConversionRule rule;
+    for (int i = 0; i < rules.count; i ++) {
+        rule = HHConversionRuleMakeFromNSValue(rules[i]);
+        
+        if (!rule.sumafter) {
+            result += rule.summand;
         }
-
-//        printf("S%d", i + 1);
-//        printf("%f", [(HHConversionRule *)[rules objectAtIndex:i] summand]);
-        resultingRule.summand += HHConversionRuleMakeFromNSValue([rules objectAtIndex:i]).summand * iMultiplier;
+        
+        result *= rule.multiplier;
+        
+        if (rule.sumafter) {
+            result += rule.summand;
+        }
     }
-
-//    printf(";\r\n");
-    return (value * resultingRule.multiplier + resultingRule.summand);
+    
+    return result;
 }
 
 @end

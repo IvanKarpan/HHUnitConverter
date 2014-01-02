@@ -9,10 +9,11 @@
 
 typedef struct {
     double multiplier;
+    BOOL sumafter;
     double summand;
 } HHConversionRule;
 
-extern HHConversionRule HHConversionRuleMake(double multiplier, double summand);
+extern HHConversionRule HHConversionRuleMake(double multiplier, double summand, BOOL sumafter);
 extern HHConversionRule HHConversionRuleMakeInverse(HHConversionRule rule);
 extern HHConversionRule HHConversionRuleMakeFromNSValue(NSValue *value);
 extern NSValue *HHConversionRuleToNSValue(HHConversionRule rule);
@@ -25,6 +26,7 @@ extern NSValue *HHConversionRuleToNSValue(HHConversionRule rule);
 - (void)letUnit:(NSString *)srcUnit convertToUnit:(NSString *)targetUnit byMultiplyingBy:(double)multiplier;
 - (void)letUnit:(NSString *)srcUnit convertToUnit:(NSString *)targetUnit byAdding:(double)summand;
 - (void)letUnit:(NSString *)srcUnit convertToUnit:(NSString *)targetUnit byMultiplyingBy:(double)multiplier andAdding:(double)summand;
+- (void)letUnit:(NSString *)srcUnit convertToUnit:(NSString *)targetUnit byMultiplyingBy:(double)multiplier andAdding:(double)summand after:(BOOL)after;
 
 - (NSNumber *)value:(double)value convertedFromUnit:(NSString *)srcUnit toUnit:(NSString *)targetUnit;
 
